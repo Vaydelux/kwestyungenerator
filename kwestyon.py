@@ -21,7 +21,7 @@ ASK_TOPIC = 1
 # === Build Prompts ===
 def build_mcq_prompt(topic: str) -> str:
     return (
-        f"Generate 20 multiple choice questions about the topic: '{topic}'. "
+        f"Generate 20 multiple choice questions about the topic: '{topic}' for Licensed Examination Teachers (LET) Philippines. "
         f"Each item must have four choices labeled a, b, c, and d, and specify the correct answer as 'answer': 'a'. "
         f"Respond in JSON array format only. Example:\n"
         f"[{{'question': '...', 'a': '...', 'b': '...', 'c': '...', 'd': '...', 'answer': '...'}}, ...]"
