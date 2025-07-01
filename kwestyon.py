@@ -18,14 +18,17 @@ GEMINI_URL = f"https://generativelanguage.googleapis.com/v1/models/{MODEL_NAME}:
 # === Conversation States ===
 ASK_TOPIC = 1
 
-# === LET Reviewer Prompt Builder ===
+# === Optimized LET Reviewer Prompt with Explanation Included ===
 def build_mcq_prompt(topic: str) -> str:
     return (
         "You are a Philippine LET (Licensure Examination for Teachers) reviewer assistant. "
-        f"Search from known LET reviewer materials and generate 30 multiple choice questions for the topic: '{topic}'. "
-        "Each item must be relevant to the LET exam scope and include four choices: 'a', 'b', 'c', and 'd'. "
-        "Also include the correct answer using the format: 'answer': 'a'. "
-        "Return only a JSON array like the example below:\n\n"
+        f"Generate 20 multiple choice questions for the topic: '{topic}'.\n"
+        "Each question object must include:\n"
+        "- 'question': the question text\n"
+        "- 'a', 'b', 'c', 'd': answer choices\n"
+        "- 'answer': correct letter (a/b/c/d)\n"
+        "- 'explanation': concise 2-sentence explanation, max 100 characters\n"
+        "Return only a JSON array like the example:\n"
         "[\n"
         "  {\n"
         "    'question': '...',\n"
@@ -33,17 +36,10 @@ def build_mcq_prompt(topic: str) -> str:
         "    'b': '...',\n"
         "    'c': '...',\n"
         "    'd': '...',\n"
-        "    'answer': '...'\n"
-        "  },\n"
-        "  ... (19 more)\n"
+        "    'answer': 'a',\n"
+        "    'explanation': 'Short reason.'\n"
+        "  }\n"
         "]"
-    )
-
-def build_explanation_prompt(questions: list) -> str:
-    return (
-        "For each question object in the JSON array below, add a field called 'explanation'. "
-        "The explanation must be concise (under 100 characters) must be (2 sentences). Only return valid JSON. No extra text.\n\n"
-        f"{json.dumps(questions, indent=2)}"
     )
 
 # === Gemini API Request ===
@@ -67,19 +63,22 @@ async def send_polls(bot, chat_id, quiz_data):
         options = [q.get(k, "") for k in ("a", "b", "c", "d")]
         explanation = q.get("explanation", "")
 
-        correct_letter = q.get("answer", "").strip().upper()
-        letter_to_index = {"A": 0, "B": 1, "C": 2, "D": 3}
+        correct_letter = q.get("answer", "").strip().lower()
+        letter_to_index = {"a": 0, "b": 1, "c": 2, "d": 3}
         correct_index = letter_to_index.get(correct_letter, 0)
 
-        bold_question = f"*{telegram.helpers.escape_markdown(f"🔹 Question no. {i} \{q.get('question', '')} ", version=2)}*"
-        msg = await bot.send_message(chat_id=chat_id, text=bold_question)
+        # Format question
+        question_text = f"🔹 Question no. {i} {q.get('question', '')}"
+        bold_question = f"*{telegram.helpers.escape_markdown(question_text, version=2)}*"
+        
+        msg = await bot.send_message(chat_id=chat_id, text=bold_question, parse_mode="MarkdownV2")
         await asyncio.sleep(2)
         await bot.pin_chat_message(chat_id=chat_id, message_id=msg.message_id, disable_notification=True)
         await asyncio.sleep(2)
 
         await bot.send_poll(
             chat_id=chat_id,
-            question= "🔹",
+            question="🔹",  # short poll title
             options=options,
             type="quiz",
             correct_option_id=correct_index,
@@ -121,12 +120,7 @@ async def handle_topic(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await message.reply_text("❌ Gemini failed to generate questions.")
         return ConversationHandler.END
 
-    enriched_mcqs = ask_gemini(build_explanation_prompt(raw_mcqs))
-    if not enriched_mcqs:
-        await message.reply_text("❌ Gemini failed to add explanations.")
-        return ConversationHandler.END
-
-    await send_polls(context.bot, chat_id, enriched_mcqs)
+    await send_polls(context.bot, chat_id, raw_mcqs)
     await message.reply_text("✅ Quiz complete!")
     return ConversationHandler.END
 
