@@ -68,7 +68,7 @@ async def send_polls(bot, chat_id, quiz_data):
         correct_index = letter_to_index.get(correct_letter, 0)
 
         # Format question
-        question_text = f"🔹 Question no. {i} {q.get('question', '')}"
+        question_text = f"🔹 Question no. {i} \\n {q.get('question', '')}"
         bold_question = f"*{telegram.helpers.escape_markdown(question_text, version=2)}*"
         
         msg = await bot.send_message(chat_id=chat_id, text=bold_question, parse_mode="MarkdownV2")
