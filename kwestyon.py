@@ -69,7 +69,7 @@ def ask_gemini(prompt: str, retries: int = 2, timeout: int = 30):
         except Exception as e:
             print(f"❌ Gemini Error on attempt {attempt}: {e}")
             break
-        await asyncio.sleep(2)  # slight delay between retries
+            await asyncio.sleep(2)  # slight delay between retries
 
     return None  # return None after retries exhausted
 
