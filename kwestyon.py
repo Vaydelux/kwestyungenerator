@@ -172,9 +172,9 @@ if __name__ == "__main__":
     print("🤖 LET Reviewer Bot is running...")
 
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
-    
-    # Get the bot username before starting
-    asyncio.run(fetch_bot_username(app.bot))
+
+    # Schedule bot username fetch after initialization
+    app.post_init = fetch_bot_username
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
@@ -185,3 +185,4 @@ if __name__ == "__main__":
     app.add_handler(conv_handler)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, fallback))
     app.run_polling()
+
