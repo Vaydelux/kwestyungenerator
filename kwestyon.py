@@ -155,14 +155,19 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # === Fallback Handler ===
 async def fallback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    message = update.message
-    user_input = message.text.strip()
+    user_input = update.message.text.strip()
+    chat_id = update.effective_chat.id
+    thread_id = update.message.message_thread_id  # for forum/topic messages
 
-    if message.chat.type in ["group", "supergroup"]:
+    if update.message.chat.type in ["group", "supergroup"]:
         if f"@{bot_username}" not in user_input.lower():
             return
 
-    await message.reply_text("Please use /start to begin.")
+    await context.bot.send_message(
+        chat_id=chat_id,
+        message_thread_id=thread_id,
+        text="Please use /start to begin."
+    )
     return ConversationHandler.END
     
 # === Main App ===
