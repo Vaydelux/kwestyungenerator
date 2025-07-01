@@ -76,10 +76,7 @@ async def send_polls(bot, chat_id, quiz_data, thread_id=None):
             parse_mode="MarkdownV2"
         )
         await asyncio.sleep(2)
-
-        await bot.pin_chat_message(chat_id=chat_id, message_id=msg.message_id, disable_notification=True)
-        await asyncio.sleep(2)
-
+        
         await bot.send_poll(
             chat_id=chat_id,
             message_thread_id=thread_id,
@@ -91,6 +88,9 @@ async def send_polls(bot, chat_id, quiz_data, thread_id=None):
             is_anonymous=False
         )
         await asyncio.sleep(3)
+
+        await bot.pin_chat_message(chat_id=chat_id, message_id=msg.message_id, disable_notification=True)
+        await asyncio.sleep(2)
 
 # === /start Command ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -115,8 +115,8 @@ async def handle_topic(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if f"@{bot_username}" not in user_input.lower():
             return  # Do not respond unless mentioned
 
-        # Remove bot mention from the topic
-        user_input = user_input.replace(f"@{bot_username}", "").strip()
+    # Remove bot mention from the topic
+    user_input = user_input.replace(f"@{bot_username}", "").strip()
 
     chat_id = update.effective_chat.id
     await message.reply_text(f"⏳ Generating 20 LET MCQs for topic: *{user_input}*", parse_mode="Markdown")
