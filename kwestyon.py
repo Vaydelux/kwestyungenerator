@@ -2,6 +2,7 @@ import os
 import json
 import requests
 import asyncio
+import time  # ← Add this at the top of your file
 import telegram
 from telegram import Update
 from telegram.ext import (
@@ -66,10 +67,10 @@ def ask_gemini(prompt: str, retries: int = 2, timeout: int = 30):
             return json.loads(reply[start:end])
         except requests.exceptions.ReadTimeout:
             print(f"⏱️ Timeout on attempt {attempt}/{retries}. Retrying...")
+            time.sleep(2)  # slight delay between retries
         except Exception as e:
             print(f"❌ Gemini Error on attempt {attempt}: {e}")
             break
-            await asyncio.sleep(2)  # slight delay between retries
 
     return None  # return None after retries exhausted
 
