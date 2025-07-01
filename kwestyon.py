@@ -112,11 +112,10 @@ async def handle_topic(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # In group, only proceed if bot is mentioned
     if chat_type in ["group", "supergroup"]:
         bot_username = context.bot.username.lower()
+        # Remove bot mention from the topic
+        user_input = user_input.replace(f"@{bot_username}", "").strip()
         if f"@{bot_username}" not in user_input.lower():
             return  # Do not respond unless mentioned
-
-    # Remove bot mention from the topic
-    user_input = user_input.replace(f"@{bot_username}", "").strip()
 
     chat_id = update.effective_chat.id
     await message.reply_text(f"⏳ Generating 20 LET MCQs for topic: *{user_input}*", parse_mode="Markdown")
