@@ -12,7 +12,7 @@ from telegram.ext import (
 # === CONFIG ===
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-MODEL_NAME = "gemini-1.5-flash"
+MODEL_NAME = "gemini-2.5-pro"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1/models/{MODEL_NAME}:generateContent?key={GEMINI_API_KEY}"
 
 # === Conversation States ===
@@ -22,7 +22,7 @@ ASK_TOPIC = 1
 def build_mcq_prompt(topic: str) -> str:
     return (
         "You are a Philippine LET (Licensure Examination for Teachers) reviewer assistant. "
-        f"Search from known LET reviewer materials and generate 20 multiple choice questions for the topic: '{topic}'. "
+        f"Search from known LET reviewer materials and generate 30 multiple choice questions for the topic: '{topic}'. "
         "Each item must be relevant to the LET exam scope and include four choices: 'a', 'b', 'c', and 'd'. "
         "Also include the correct answer using the format: 'answer': 'a'. "
         "Return only a JSON array like the example below:\n\n"
@@ -42,7 +42,7 @@ def build_mcq_prompt(topic: str) -> str:
 def build_explanation_prompt(questions: list) -> str:
     return (
         "For each question object in the JSON array below, add a field called 'explanation'. "
-        "The explanation must be concise (under 100 characters). Only return valid JSON. No extra text.\n\n"
+        "The explanation must be concise (under 100 characters) must be (2 sentences). Only return valid JSON. No extra text.\n\n"
         f"{json.dumps(questions, indent=2)}"
     )
 
