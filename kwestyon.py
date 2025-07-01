@@ -21,10 +21,11 @@ ASK_TOPIC = 1
 # === Global Variable ===
 bot_username = None  # global variable to store bot's username
 
-async def fetch_bot_username(bot):
+async def fetch_bot_username(app):
     global bot_username
-    me = await bot.get_me()
+    me = await app.bot.get_me()
     bot_username = me.username.lower()
+
 
 # === Optimized LET Reviewer Prompt with Explanation Included ===
 def build_mcq_prompt(topic: str) -> str:
@@ -149,10 +150,7 @@ async def handle_topic(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # === Cancel Command ===
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("❌ Quiz canceled.")
-    
-    chat_id = update.effective_chat.id
-    await message.reply_text(f"❌ Quiz canceled.", parse_mode="Markdown")
+    await update.message.reply_text("❌ Quiz canceled.", parse_mode="Markdown")
     return ConversationHandler.END
 
 # === Fallback Handler ===
@@ -161,12 +159,12 @@ async def fallback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_input = message.text.strip()
 
     if message.chat.type in ["group", "supergroup"]:
-        bot_username = context.bot.username.lower()
         if f"@{bot_username}" not in user_input.lower():
             return
 
     await message.reply_text("Please use /start to begin.")
-
+    return ConversationHandler.END
+    
 # === Main App ===
 if __name__ == "__main__":
     print("🤖 LET Reviewer Bot is running...")
