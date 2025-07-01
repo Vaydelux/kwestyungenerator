@@ -18,6 +18,14 @@ GEMINI_URL = f"https://generativelanguage.googleapis.com/v1/models/{MODEL_NAME}:
 # === Conversation States ===
 ASK_TOPIC = 1
 
+# === Global Variable ===
+bot_username = None  # global variable to store bot's username
+
+async def fetch_bot_username(bot):
+    global bot_username
+    me = await bot.get_me()
+    bot_username = me.username.lower()
+
 # === Optimized LET Reviewer Prompt with Explanation Included ===
 def build_mcq_prompt(topic: str) -> str:
     return (
@@ -101,28 +109,31 @@ async def send_polls(bot, chat_id, quiz_data, thread_id=None):
 
 # === /start Command ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global bot_username
     await update.message.reply_text(
         "🧠 I am your Philippine LET Reviewer bot.\n"
         "What topic do you want to generate MCQs for?\n\n"
         "📌 In group, please reply with the topic and mention me like this:\n"
-        "`@YourBotName Professional Education`", parse_mode="Markdown"
+        f"`@{bot_username} Professional Education`", parse_mode="Markdown"
     )
     return ASK_TOPIC
 
 # === Handle Topic Input ===
 async def handle_topic(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global bot_username
     message = update.message
     user_input = message.text.strip()
     chat_type = message.chat.type
     message_thread_id = message.message_thread_id  # 🧵 get topic/thread ID
+    
 
     # In group, only proceed if bot is mentioned
     if chat_type in ["group", "supergroup"]:
-        bot_username = context.bot.username.lower()
-        # Remove bot mention from the topic
-        user_input = user_input.replace(f"@{bot_username}", "").strip()
         if f"@{bot_username}" not in user_input.lower():
             return  # Do not respond unless mentioned
+
+        # Clean mention after checking / Remove bot mention from the topic
+        user_input = user_input.replace(f"@{bot_username}", "").strip()
 
     chat_id = update.effective_chat.id
     await message.reply_text(f"⏳ Generating 20 LET MCQs for topic: *{user_input}*", parse_mode="Markdown")
@@ -161,6 +172,9 @@ if __name__ == "__main__":
     print("🤖 LET Reviewer Bot is running...")
 
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+    
+    # Get the bot username before starting
+    asyncio.run(fetch_bot_username(app.bot))
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
