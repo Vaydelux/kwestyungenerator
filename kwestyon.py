@@ -71,15 +71,15 @@ async def send_polls(bot, chat_id, quiz_data):
         letter_to_index = {"A": 0, "B": 1, "C": 2, "D": 3}
         correct_index = letter_to_index.get(correct_letter, 0)
 
-        msg = await bot.send_message(chat_id=chat_id, text=f"🔹 Question no. {i}")
+        bold_question = f"*{telegram.helpers.escape_markdown(f"🔹 Question no. {i} " ,q.get('question', ''), version=2)}*"
+        msg = await bot.send_message(chat_id=chat_id, text=bold_question)
         await asyncio.sleep(2)
         await bot.pin_chat_message(chat_id=chat_id, message_id=msg.message_id, disable_notification=True)
         await asyncio.sleep(2)
 
-        bold_question = f"*{telegram.helpers.escape_markdown(q.get('question', ''), version=2)}*"
         await bot.send_poll(
             chat_id=chat_id,
-            question=bold_question,
+            question= "🔹",
             options=options,
             type="quiz",
             correct_option_id=correct_index,
