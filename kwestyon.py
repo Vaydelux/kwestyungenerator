@@ -18,13 +18,25 @@ GEMINI_URL = f"https://generativelanguage.googleapis.com/v1/models/{MODEL_NAME}:
 # === Conversation States ===
 ASK_TOPIC = 1
 
-# === Build Prompts ===
+# === LET Reviewer Prompt Builder ===
 def build_mcq_prompt(topic: str) -> str:
     return (
-        f"Generate 20 multiple choice questions about the topic: '{topic}' for Licensed Examination Teachers (LET) Philippines. "
-        f"Each item must have four choices labeled a, b, c, and d, and specify the correct answer as 'answer': 'a'. "
-        f"Respond in JSON array format only. Example:\n"
-        f"[{{'question': '...', 'a': '...', 'b': '...', 'c': '...', 'd': '...', 'answer': '...'}}, ...]"
+        "You are a Philippine LET (Licensure Examination for Teachers) reviewer assistant. "
+        f"Search from known LET reviewer materials and generate 20 multiple choice questions for the topic: '{topic}'. "
+        "Each item must be relevant to the LET exam scope and include four choices: 'a', 'b', 'c', and 'd'. "
+        "Also include the correct answer using the format: 'answer': 'a'. "
+        "Return only a JSON array like the example below:\n\n"
+        "[\n"
+        "  {\n"
+        "    'question': '...',\n"
+        "    'a': '...',\n"
+        "    'b': '...',\n"
+        "    'c': '...',\n"
+        "    'd': '...',\n"
+        "    'answer': '...'\n"
+        "  },\n"
+        "  ... (19 more)\n"
+        "]"
     )
 
 def build_explanation_prompt(questions: list) -> str:
@@ -78,22 +90,31 @@ async def send_polls(bot, chat_id, quiz_data):
 
 # === /start Command ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🧠 What topic do you want to generate MCQs for?")
+    await update.message.reply_text(
+        "🧠 I am your Philippine LET Reviewer bot.\n"
+        "What topic do you want to generate MCQs for?\n\n"
+        "📌 In group, please reply with the topic and mention me like this:\n"
+        "`@YourBotName Professional Education`", parse_mode="Markdown"
+    )
     return ASK_TOPIC
 
 # === Handle Topic Input ===
 async def handle_topic(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
     user_input = message.text.strip()
+    chat_type = message.chat.type
 
-    # Respond only if mentioned in group
-    if message.chat.type in ["group", "supergroup"]:
+    # In group, only proceed if bot is mentioned
+    if chat_type in ["group", "supergroup"]:
         bot_username = context.bot.username.lower()
         if f"@{bot_username}" not in user_input.lower():
-            return
+            return  # Do not respond unless mentioned
+
+        # Remove bot mention from the topic
+        user_input = user_input.replace(f"@{bot_username}", "").strip()
 
     chat_id = update.effective_chat.id
-    await message.reply_text(f"⏳ Generating 20 MCQs for topic: *{user_input}*", parse_mode="Markdown")
+    await message.reply_text(f"⏳ Generating 20 LET MCQs for topic: *{user_input}*", parse_mode="Markdown")
 
     raw_mcqs = ask_gemini(build_mcq_prompt(user_input))
     if not raw_mcqs:
@@ -128,7 +149,7 @@ async def fallback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # === Main App ===
 if __name__ == "__main__":
-    print("🤖 Bot running...")
+    print("🤖 LET Reviewer Bot is running...")
 
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
