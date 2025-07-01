@@ -86,6 +86,9 @@ async def send_polls(bot, chat_id, quiz_data, thread_id=None):
         )
         await asyncio.sleep(2)
         
+        await bot.pin_chat_message(chat_id=chat_id, message_id=msg.message_id, disable_notification=True)
+        await asyncio.sleep(2)
+        
         await bot.send_poll(
             chat_id=chat_id,
             message_thread_id=thread_id,
@@ -98,8 +101,6 @@ async def send_polls(bot, chat_id, quiz_data, thread_id=None):
         )
         await asyncio.sleep(3)
 
-        await bot.pin_chat_message(chat_id=chat_id, message_id=msg.message_id, disable_notification=True)
-        await asyncio.sleep(2)
 
 # === /start Command ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
