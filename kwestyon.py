@@ -2,7 +2,6 @@ import os
 import json
 import requests
 import asyncio
-import time  # ← Add this at the top of your file
 import telegram
 from telegram import Update
 from telegram.ext import (
@@ -53,26 +52,19 @@ def build_mcq_prompt(topic: str) -> str:
     )
 
 # === Gemini API Request ===
-def ask_gemini(prompt: str, retries: int = 2, timeout: int = 30):
+def ask_gemini(prompt: str):
     headers = {"Content-Type": "application/json"}
     payload = {"contents": [{"role": "user", "parts": [{"text": prompt}]}]}
-
-    for attempt in range(1, retries + 1):
-        try:
-            res = requests.post(GEMINI_URL, headers=headers, json=payload, timeout=timeout)
-            res.raise_for_status()
-            reply = res.json()["candidates"][0]["content"]["parts"][0]["text"]
-            start = reply.find("[")
-            end = reply.rfind("]") + 1
-            return json.loads(reply[start:end])
-        except requests.exceptions.ReadTimeout:
-            print(f"⏱️ Timeout on attempt {attempt}/{retries}. Retrying...")
-            time.sleep(2)  # slight delay between retries
-        except Exception as e:
-            print(f"❌ Gemini Error on attempt {attempt}: {e}")
-            break
-
-    return None  # return None after retries exhausted
+    try:
+        res = requests.post(GEMINI_URL, headers=headers, json=payload)
+        res.raise_for_status()
+        reply = res.json()["candidates"][0]["content"]["parts"][0]["text"]
+        start = reply.find("[")
+        end = reply.rfind("]") + 1
+        return json.loads(reply[start:end])
+    except Exception as e:
+        print("Gemini Error:", e)
+        return None
 
 # === Send Quiz Polls ===
 async def send_polls(bot, chat_id, quiz_data, thread_id=None):
