@@ -58,27 +58,32 @@ def ask_gemini(prompt: str):
         return None
 
 # === Send Quiz Polls ===
-async def send_polls(bot, chat_id, quiz_data):
+async def send_polls(bot, chat_id, quiz_data, thread_id=None):
     for i, q in enumerate(quiz_data, start=1):
         options = [q.get(k, "") for k in ("a", "b", "c", "d")]
         explanation = q.get("explanation", "")
-
         correct_letter = q.get("answer", "").strip().lower()
         letter_to_index = {"a": 0, "b": 1, "c": 2, "d": 3}
         correct_index = letter_to_index.get(correct_letter, 0)
 
-        # Format question
-        question_text = f"🔹 Question no. {i} \\n {q.get('question', '')}"
+        question_text = f"🔹 Question no. {i}\n{q.get('question', '')}"
         bold_question = f"*{telegram.helpers.escape_markdown(question_text, version=2)}*"
-        
-        msg = await bot.send_message(chat_id=chat_id, text=bold_question, parse_mode="MarkdownV2")
+
+        msg = await bot.send_message(
+            chat_id=chat_id,
+            message_thread_id=thread_id,
+            text=bold_question,
+            parse_mode="MarkdownV2"
+        )
         await asyncio.sleep(2)
+
         await bot.pin_chat_message(chat_id=chat_id, message_id=msg.message_id, disable_notification=True)
         await asyncio.sleep(2)
 
         await bot.send_poll(
             chat_id=chat_id,
-            question="🔹",  # short poll title
+            message_thread_id=thread_id,
+            question="🔹",
             options=options,
             type="quiz",
             correct_option_id=correct_index,
@@ -102,6 +107,7 @@ async def handle_topic(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
     user_input = message.text.strip()
     chat_type = message.chat.type
+    message_thread_id = message.message_thread_id  # 🧵 get topic/thread ID
 
     # In group, only proceed if bot is mentioned
     if chat_type in ["group", "supergroup"]:
@@ -120,13 +126,16 @@ async def handle_topic(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await message.reply_text("❌ Gemini failed to generate questions.")
         return ConversationHandler.END
 
-    await send_polls(context.bot, chat_id, raw_mcqs)
+    await send_polls(context.bot, chat_id, raw_mcqs, message_thread_id)
     await message.reply_text("✅ Quiz complete!")
     return ConversationHandler.END
 
 # === Cancel Command ===
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("❌ Quiz canceled.")
+    
+    chat_id = update.effective_chat.id
+    await message.reply_text(f"❌ Quiz canceled.", parse_mode="Markdown")
     return ConversationHandler.END
 
 # === Fallback Handler ===
