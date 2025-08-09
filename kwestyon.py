@@ -54,7 +54,20 @@ def build_mcq_prompt(topic: str) -> str:
 # === Gemini API Request ===
 def ask_gemini(prompt: str):
     headers = {"Content-Type": "application/json"}
-    payload = {"contents": [{"role": "user", "parts": [{"text": prompt}]}]}
+    payload = {
+        "contents": [
+            {
+                "role": "user",
+                "parts": [{"text": prompt}]
+            }
+        ],
+        "generationConfig": {
+            "temperature": 1.0,         # Maximum creativity
+            "topK": 1000,               # Large vocabulary sampling
+            "topP": 1.0,                 # Include all probability space
+            "maxOutputTokens": 4096      # Long explanations and more detail
+        }
+    }
     try:
         res = requests.post(GEMINI_URL, headers=headers, json=payload)
         res.raise_for_status()
