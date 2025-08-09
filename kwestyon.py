@@ -29,7 +29,7 @@ async def fetch_bot_username(app):
 
 # === Optimized LET Reviewer Prompt with Explanation Included ===
 def build_mcq_prompt(topic: str) -> str:
-    return (
+     return (
         "You are a Philippine LET (Licensure Examination for Teachers) reviewer assistant. "
         f"Generate 20 multiple choice questions for the topic: '{topic}'.\n"
         "Each question object must include:\n"
@@ -40,6 +40,8 @@ def build_mcq_prompt(topic: str) -> str:
         "   • States why the correct answer is correct\n"
         "   • Mentions relevant subtopics or concepts\n"
         "   • Includes any important theory, law, or rule related to the topic\n"
+        "- 'keywords': 3–6 short keywords or hints (comma-separated) that summarize the main concepts in the question "
+        "(useful for quick recall during review)\n"
         "Return only a JSON array, like this example:\n"
         "[\n"
         "  {\n"
@@ -49,7 +51,8 @@ def build_mcq_prompt(topic: str) -> str:
         "    \"c\": \"...\",\n"
         "    \"d\": \"...\",\n"
         "    \"answer\": \"a\",\n"
-        "    \"explanation\": \"Short but informative reason referencing related theory or subtopic.\"\n"
+        "    \"explanation\": \"Short but informative reason referencing related theory or subtopic.\",\n"
+        "    \"keywords\": \"term1, term2, term3\"\n"
         "  }\n"
         "]"
     )
@@ -75,10 +78,11 @@ async def send_polls(bot, chat_id, quiz_data, thread_id=None):
     for i, q in enumerate(quiz_data, start=1):
         options = [q.get(k, "") for k in ("a", "b", "c", "d")]
         explanation = q.get("explanation", "")
+        keywords =  q.get("keywords", "")
         correct_letter = q.get("answer", "").strip().lower()
         letter_to_index = {"a": 0, "b": 1, "c": 2, "d": 3}
         correct_index = letter_to_index.get(correct_letter, 0)
-
+        
         question_text = f"🔹 Question no. {i}\n{q.get('question', '')}"
         escaped_question = telegram.helpers.escape_markdown(question_text, version=2)
         # spoiler_question = f"||{escaped_question}||"  # Blur the text
@@ -108,11 +112,23 @@ async def send_polls(bot, chat_id, quiz_data, thread_id=None):
         )
         
         await asyncio.sleep(2)
+        hint_title = "Hint: "
+        escaped_hint = telegram.helpers.escape_markdown(hint_title, version=2)
+        escaped_hinttext = telegram.helpers.escape_markdown(keywords, version=2)
+        spoiler_hint = f"{escaped_hint} ||{escaped_hinttext}||"
+        exp = await bot.send_message(
+            chat_id=chat_id,
+            message_thread_id=thread_id,
+            text=spoiler_hint,
+            parse_mode="MarkdownV2"
+        )
+        
+        await asyncio.sleep(2)
         explanation_title = "🔹Explanation: "
         escaped_title = telegram.helpers.escape_markdown(explanation_title, version=2)
         escaped_text = telegram.helpers.escape_markdown(explanation, version=2)
         spoiler_explanation = f"{escaped_title} ||{escaped_text}||"
-        msg = await bot.send_message(
+        exp = await bot.send_message(
             chat_id=chat_id,
             message_thread_id=thread_id,
             text=spoiler_explanation,
