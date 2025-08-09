@@ -68,25 +68,26 @@ def ask_gemini(prompt: str, temperature: float = 1.5, max_tokens: int = 4096):
             "maxOutputTokens": max_tokens
         }
     }
-
     try:
         res = requests.post(GEMINI_URL, headers=headers, json=payload)
-        print("Status Code:", res.status_code)
-        print("Raw Response:", res.text)  # <— This will show Gemini’s actual error
-
+        print("DEBUG STATUS:", res.status_code)
+        print("DEBUG RAW RESPONSE:", res.text)  # Show raw output from Gemini
         res.raise_for_status()
 
         data = res.json()
         reply = data["candidates"][0]["content"]["parts"][0]["text"]
 
-        # Optional: only parse if we see a [
-        if "[" in reply and "]" in reply:
-            start = reply.find("[")
-            end = reply.rfind("]") + 1
-            return json.loads(reply[start:end])
-        else:
-            return reply  # Return plain text if not JSON
+        # DEBUG: See what Gemini actually sent
+        print("DEBUG REPLY:", reply)
 
+        # Safely extract JSON
+        start = reply.find("[")
+        end = reply.rfind("]") + 1
+        if start == -1 or end == 0:
+            print("❌ No JSON array found in reply.")
+            return None
+
+        return json.loads(reply[start:end])
     except Exception as e:
         print("Gemini Error:", e)
         return None
