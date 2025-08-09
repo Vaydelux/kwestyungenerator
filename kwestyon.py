@@ -36,20 +36,24 @@ def build_mcq_prompt(topic: str) -> str:
         "- 'question': the question text (max 280 characters)\n"
         "- 'a', 'b', 'c', 'd': answer choices (max 100 characters total per choice)\n"
         "- 'answer': correct letter (a/b/c/d)\n"
-        "- 'explanation': concise 2-sentence explanation, max 100 characters\n"
-        "Return only a JSON array like the example:\n"
+        "- 'explanation': a clear 2–3 sentence explanation that:\n"
+        "   • States why the correct answer is correct\n"
+        "   • Mentions relevant subtopics or concepts\n"
+        "   • Includes any important theory, law, or rule related to the topic\n"
+        "Return only a JSON array, like this example:\n"
         "[\n"
         "  {\n"
-        "    'question': '...',\n"
-        "    'a': '...',\n"
-        "    'b': '...',\n"
-        "    'c': '...',\n"
-        "    'd': '...',\n"
-        "    'answer': 'a',\n"
-        "    'explanation': 'Short reason.'\n"
+        "    \"question\": \"...\",\n"
+        "    \"a\": \"...\",\n"
+        "    \"b\": \"...\",\n"
+        "    \"c\": \"...\",\n"
+        "    \"d\": \"...\",\n"
+        "    \"answer\": \"a\",\n"
+        "    \"explanation\": \"Short but informative reason referencing related theory or subtopic.\"\n"
         "  }\n"
         "]"
     )
+
 
 # === Gemini API Request ===
 def ask_gemini(prompt: str):
@@ -77,8 +81,8 @@ async def send_polls(bot, chat_id, quiz_data, thread_id=None):
 
         question_text = f"🔹 Question no. {i}\n{q.get('question', '')}"
         escaped_question = telegram.helpers.escape_markdown(question_text, version=2)
-        spoiler_question = f"||{escaped_question}||"  # Blur the text
-        bold_question = f"*{spoiler_question}*"
+        # spoiler_question = f"||{escaped_question}||"  # Blur the text
+        bold_question = f"*{escaped_question}*"
 
 
         msg = await bot.send_message(
