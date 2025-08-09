@@ -68,7 +68,7 @@ def ask_gemini(prompt: str):
             "maxOutputTokens": 4096      # Long explanations and more detail
         }
     }
-   try:
+    try:
         res = requests.post(GEMINI_URL, headers=headers, json=payload)
         res.raise_for_status()
         reply = res.json()["candidates"][0]["content"]["parts"][0]["text"]
@@ -78,7 +78,6 @@ def ask_gemini(prompt: str):
     except Exception as e:
         print("Gemini Error:", e)
         return None
-
 
 # === Send Quiz Polls ===
 async def send_polls(bot, chat_id, quiz_data, thread_id=None):
@@ -195,5 +194,7 @@ if __name__ == "__main__":
 
     app.add_handler(conv_handler)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, fallback))
-    app.run_polling()
 
+how to add temperature on ai gemini config? 
+
+    app.run_polling()
