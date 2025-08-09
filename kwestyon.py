@@ -31,13 +31,14 @@ async def fetch_bot_username(app):
 def build_mcq_prompt(topic: str) -> str:
     return (
         "You are a Philippine LET (Licensure Examination for Teachers) reviewer assistant. "
-        f"Generate 20 multiple choice questions for the topic: '{topic}'.\n"
-        "Each question object must include:\n"
-        "- 'question': the question text (max 280 characters)\n"
-        "- 'a', 'b', 'c', 'd': answer choices (max 100 characters total per choice)\n"
-        "- 'answer': correct letter (a/b/c/d)\n"
-        "- 'explanation': concise 2-sentence explanation, max 100 characters\n"
-        "Return only a JSON array like the example:\n"
+        f"Generate exactly 20 multiple choice questions for the topic: '{topic}'.\n"
+        "Output ONLY a valid JSON array — no explanations, no notes, no extra text.\n"
+        "Each element of the array must be an object with these keys:\n"
+        "  - 'question': string (max 280 characters)\n"
+        "  - 'a', 'b', 'c', 'd': string (max 100 characters each)\n"
+        "  - 'answer': one letter from 'a', 'b', 'c', 'd'\n"
+        "  - 'explanation': string (max 100 characters)\n"
+        "Example:\n"
         "[\n"
         "  {\n"
         "    'question': '...',\n"
@@ -48,11 +49,15 @@ def build_mcq_prompt(topic: str) -> str:
         "    'answer': 'a',\n"
         "    'explanation': 'Short reason.'\n"
         "  }\n"
-        "]"
+        "]\n"
+        "Do not include ```json or any extra text."
     )
+
 
 # === Gemini API Request ===
 def ask_gemini(prompt: str, temperature: float = 1.5, max_tokens: int = 4096):
+    import re
+    
     headers = {"Content-Type": "application/json"}
     payload = {
         "contents": [
@@ -76,22 +81,28 @@ def ask_gemini(prompt: str, temperature: float = 1.5, max_tokens: int = 4096):
 
         data = res.json()
         reply = data["candidates"][0]["content"]["parts"][0]["text"]
-
-        # DEBUG: See what Gemini actually sent
         print("DEBUG REPLY:", reply)
 
-        # Safely extract JSON
-        start = reply.find("[")
-        end = reply.rfind("]") + 1
-        if start == -1 or end == 0:
+        # ✅ Safely extract JSON array using regex
+        match = re.search(r"\[.*\]", reply, re.DOTALL)
+        if not match:
             print("❌ No JSON array found in reply.")
             return None
 
-        return json.loads(reply[start:end])
+        json_str = match.group(0)
+
+        # ✅ Convert single quotes to double quotes
+        json_str = json_str.replace("'", '"')
+
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError as e:
+            print("❌ JSON decode error:", e)
+            return None  
+
     except Exception as e:
         print("Gemini Error:", e)
         return None
-
 
 
 # === Send Quiz Polls ===
