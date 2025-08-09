@@ -52,7 +52,7 @@ def build_mcq_prompt(topic: str) -> str:
         "    \"d\": \"...\",\n"
         "    \"answer\": \"a\",\n"
         "    \"explanation\": \"Short but informative reason referencing related theory or subtopic.\",\n"
-        "    \"keywords\": \"term1, term2, term3\"\n"
+        "    \"keywords\": \"term1, term2, term3\",\n"
         "  }\n"
         "]"
     )
@@ -66,9 +66,19 @@ def ask_gemini(prompt: str):
         res = requests.post(GEMINI_URL, headers=headers, json=payload)
         res.raise_for_status()
         reply = res.json()["candidates"][0]["content"]["parts"][0]["text"]
-        start = reply.find("[")
-        end = reply.rfind("]") + 1
-        return json.loads(reply[start:end])
+
+        # Extract JSON array with regex
+        match = re.search(r"\[.*\]", reply, re.DOTALL)
+        if not match:
+            raise ValueError("No JSON array found in Gemini response")
+
+        json_str = match.group(0)
+
+        # Remove trailing commas before closing braces/brackets
+        json_str = re.sub(r",\s*([\]}])", r"\1", json_str)
+
+        return json.loads(json_str)
+
     except Exception as e:
         print("Gemini Error:", e)
         return None
