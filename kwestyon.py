@@ -99,8 +99,18 @@ async def send_polls(bot, chat_id, quiz_data, thread_id=None):
             options=options,
             type="quiz",
             correct_option_id=correct_index,
-            explanation=explanation,
+            #explanation=explanation,
             is_anonymous=False
+        )
+        
+        await asyncio.sleep(2)
+        escaped_explanation = telegram.helpers.escape_markdown(explanation, version=2)
+        spoiler_explanation = f"||{escaped_explanation}||"  # Blur the text
+        msg = await bot.send_message(
+            chat_id=chat_id,
+            message_thread_id=thread_id,
+            text=spoiler_explanation,
+            parse_mode="MarkdownV2"
         )
         await asyncio.sleep(3)
 
