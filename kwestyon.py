@@ -52,19 +52,36 @@ def build_mcq_prompt(topic: str) -> str:
     )
 
 # === Gemini API Request ===
-def ask_gemini(prompt: str):
+def ask_gemini(prompt: str, temperature: float = 1.5, max_tokens: int = 4096):
     headers = {"Content-Type": "application/json"}
-    payload = {"contents": [{"role": "user", "parts": [{"text": prompt}]}]}
+    payload = {
+        "contents": [
+            {
+                "role": "user",
+                "parts": [{"text": prompt}]
+            }
+        ],
+        "generationConfig": {
+            "temperature": temperature,   # Creativity: 0 = precise, 2 = max creative
+            "topK": 40,                   # Highest allowed
+            "topP": 1.0,                   # Keep all token probabilities
+            "maxOutputTokens": max_tokens
+        }
+    }
     try:
         res = requests.post(GEMINI_URL, headers=headers, json=payload)
         res.raise_for_status()
-        reply = res.json()["candidates"][0]["content"]["parts"][0]["text"]
+        data = res.json()
+        reply = data["candidates"][0]["content"]["parts"][0]["text"]
         start = reply.find("[")
         end = reply.rfind("]") + 1
         return json.loads(reply[start:end])
     except Exception as e:
         print("Gemini Error:", e)
+        if 'res' in locals():
+            print("Gemini Response:", res.text)
         return None
+
 
 # === Send Quiz Polls ===
 async def send_polls(bot, chat_id, quiz_data, thread_id=None):
