@@ -68,7 +68,7 @@ def ask_gemini(prompt: str):
             "maxOutputTokens": 4096      # Long explanations and more detail
         }
     }
-    try:
+   try:
         res = requests.post(GEMINI_URL, headers=headers, json=payload)
         res.raise_for_status()
         reply = res.json()["candidates"][0]["content"]["parts"][0]["text"]
@@ -78,6 +78,7 @@ def ask_gemini(prompt: str):
     except Exception as e:
         print("Gemini Error:", e)
         return None
+
 
 # === Send Quiz Polls ===
 async def send_polls(bot, chat_id, quiz_data, thread_id=None):
