@@ -62,25 +62,35 @@ def ask_gemini(prompt: str, temperature: float = 1.5, max_tokens: int = 4096):
             }
         ],
         "generationConfig": {
-            "temperature": temperature,   # Creativity: 0 = precise, 2 = max creative
-            "topK": 40,                   # Highest allowed
-            "topP": 1.0,                   # Keep all token probabilities
+            "temperature": temperature,
+            "topK": 40,
+            "topP": 1.0,
             "maxOutputTokens": max_tokens
         }
     }
+
     try:
         res = requests.post(GEMINI_URL, headers=headers, json=payload)
+        print("Status Code:", res.status_code)
+        print("Raw Response:", res.text)  # <— This will show Gemini’s actual error
+
         res.raise_for_status()
+
         data = res.json()
         reply = data["candidates"][0]["content"]["parts"][0]["text"]
-        start = reply.find("[")
-        end = reply.rfind("]") + 1
-        return json.loads(reply[start:end])
+
+        # Optional: only parse if we see a [
+        if "[" in reply and "]" in reply:
+            start = reply.find("[")
+            end = reply.rfind("]") + 1
+            return json.loads(reply[start:end])
+        else:
+            return reply  # Return plain text if not JSON
+
     except Exception as e:
         print("Gemini Error:", e)
-        if 'res' in locals():
-            print("Gemini Response:", res.text)
         return None
+
 
 
 # === Send Quiz Polls ===
