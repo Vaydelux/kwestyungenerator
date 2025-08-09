@@ -76,7 +76,10 @@ async def send_polls(bot, chat_id, quiz_data, thread_id=None):
         correct_index = letter_to_index.get(correct_letter, 0)
 
         question_text = f"🔹 Question no. {i}\n{q.get('question', '')}"
-        bold_question = f"*{telegram.helpers.escape_markdown(question_text, version=2)}*"
+        escaped_question = telegram.helpers.escape_markdown(question_text, version=2)
+        spoiler_question = f"||{escaped_question}||"  # Blur the text
+        bold_question = f"*{spoiler_question}*"
+
 
         msg = await bot.send_message(
             chat_id=chat_id,
