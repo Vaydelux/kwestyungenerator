@@ -57,7 +57,7 @@ def build_mcq_prompt(topic: str) -> str:
 # === Gemini API Request ===
 def ask_gemini(prompt: str, temperature: float = 1.5, max_tokens: int = 4096):
     import re
-    
+
     headers = {"Content-Type": "application/json"}
     payload = {
         "contents": [
@@ -103,6 +103,8 @@ def ask_gemini(prompt: str, temperature: float = 1.5, max_tokens: int = 4096):
     except Exception as e:
         print("Gemini Error:", e)
         return None
+
+
 
 
 # === Send Quiz Polls ===
