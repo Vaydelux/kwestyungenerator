@@ -54,20 +54,7 @@ def build_mcq_prompt(topic: str) -> str:
 # === Gemini API Request ===
 def ask_gemini(prompt: str):
     headers = {"Content-Type": "application/json"}
-    payload = {
-        "contents": [
-            {
-                "role": "user",
-                "parts": [{"text": prompt}]
-            }
-        ],
-        "generationConfig": {
-            "temperature": 1.0,         # Maximum creativity
-            "topK": 1000,               # Large vocabulary sampling
-            "topP": 1.0,                 # Include all probability space
-            "maxOutputTokens": 4096      # Long explanations and more detail
-        }
-    }
+    payload = {"contents": [{"role": "user", "parts": [{"text": prompt}]}]}
     try:
         res = requests.post(GEMINI_URL, headers=headers, json=payload)
         res.raise_for_status()
@@ -194,4 +181,7 @@ if __name__ == "__main__":
 
     app.add_handler(conv_handler)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, fallback))
+
+how to add temperature on ai gemini config? 
+
     app.run_polling()
